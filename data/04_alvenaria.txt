@@ -1,0 +1,4 @@
+DADOS FICTÍCIOS — Alvenaria e instalações.
+A etapa Alvenaria necessita de tijolo, cimento e areia.
+A etapa Alvenaria depende da etapa Estrutura.
+A etapa Instalações depende da etapa Alvenaria.

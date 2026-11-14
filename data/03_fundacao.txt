@@ -1,0 +1,4 @@
+DADOS FICTÍCIOS — Fundação e estrutura.
+A etapa Fundação necessita de cimento, areia e brita.
+A etapa Estrutura necessita de cimento, brita e aço.
+A etapa Estrutura depende da etapa Fundação.

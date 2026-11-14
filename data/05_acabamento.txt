@@ -1,0 +1,5 @@
+DADOS FICTÍCIOS — Acabamento.
+A etapa Acabamento necessita de cimento e areia.
+A etapa Acabamento depende da etapa Instalações.
+Neste conjunto fictício, cimento Portland é outro nome para cimento.
+As dependências indicam precedência entre etapas; não existem informações sobre estoque, preços, prazos ou atrasos efetivos.

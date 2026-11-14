@@ -1,0 +1,4 @@
+DADOS FICTÍCIOS — Fornecimento de materiais.
+O fornecedor Construmax fornece cimento e aço.
+O fornecedor Areial Sol fornece areia e brita.
+O fornecedor Cerâmica Aurora fornece tijolo.

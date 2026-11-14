@@ -1,0 +1,3 @@
+DADOS FICTÍCIOS — Plano do Residencial Horizonte.
+A obra Residencial Horizonte utiliza cimento, areia, brita, aço e tijolo.
+A obra Residencial Horizonte possui as etapas Fundação, Estrutura, Alvenaria, Instalações e Acabamento.

@@ -1,0 +1,58 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{url}
+\title{Consulta de Materiais e Fornecedores da Construção Civil com GraphRAG: um MVP Acadêmico}
+\author{\IEEEauthorblockN{Preencher nomes dos integrantes}
+\IEEEauthorblockA{Preencher instituição e curso\\Tendências em Ciência da Computação}}
+\begin{document}
+\maketitle
+\begin{abstract}
+Este trabalho apresenta um protótipo de consulta a documentos fictícios de construção civil com recuperação aumentada por grafos. O sistema extrai entidades e relações por um modelo de linguagem, armazena conhecimento no Neo4j e combina busca vetorial, textual e travessia Cypher. A interface apresenta caminhos, fontes e consultas. A geração restrita utiliza seleção de evidências por LLM e verbalização por templates. O escopo privilegia simplicidade e rastreabilidade. A validação cobre lógica e interface, além de execução real de ingestão e das três perguntas de demonstração com modelos locais.
+\end{abstract}
+\begin{IEEEkeywords}
+GraphRAG, grafos de conhecimento, Neo4j, construção civil.
+\end{IEEEkeywords}
+
+\section{Introdução}
+Modelos de linguagem podem produzir informações sem apoio documental. Grafos permitem tornar explícitas as relações usadas para responder perguntas. Este MVP adota recuperação sobre grafos inspirada em GraphRAG~\cite{graphrag} e restrições de domínio inspiradas em KAG~\cite{kag}. Não reproduz integralmente esses frameworks. O problema delimitado é consultar materiais, fornecedores e impactos potenciais por dependência entre etapas de uma obra fictícia.
+
+\section{Dados e Modelagem}
+O conjunto contém cinco textos curtos escritos para a demonstração, sem dados reais. Esperam-se uma obra, cinco materiais, três fornecedores, cinco etapas e cinco documentos. Os rótulos são Obra, Material, Fornecedor, Etapa e Documento. Entidade é um rótulo auxiliar. As relações são UTILIZA, FORNECE, POSSUI\_ETAPA, NECESSITA, DEPENDE\_DE e MENCIONA. A direção de DEPENDE\_DE vai da etapa dependente para seu pré-requisito. A base não contém estoque, preços, datas ou atrasos efetivos.
+
+IDs normalizados e constraints de unicidade evitam duplicações. Há índices RANGE, FULLTEXT e VECTOR. No Neo4j 5, RANGE substitui o antigo BTree para propriedades~\cite{migration}. Textos são recuperados como unidades inteiras, adequadas ao tamanho reduzido da coleção.
+
+\section{Método}
+A inferência é local, sem serviços pagos: Ollama 0.40.16 executa Qwen2.5 7B quantizado para texto e EmbeddingGemma para vetores de 768 dimensões. O equipamento verificado é um MacBook Apple M4 com 16 GiB de RAM. O servidor utiliza somente a interface de loopback, com recursos de nuvem desativados. O banco existente Neo4j 2026.10.2 foi preservado; apenas a dimensão do índice vetorial mudou.
+
+O LLM primeiro identifica entidades e depois extrai relações e trechos literais. Um JSON Schema limita os extremos aos nomes identificados, aos pares de tipos e às frases que expressam um dos cinco verbos do domínio. São candidatos estruturais; o LLM seleciona as relações afirmadas pelo texto. O vocabulário controlado limita a generalização a documentos com outras formulações. A extração permite uma tentativa adicional de correção das relações inválidas. O código valida rótulos, tipos, extremos e ocorrência textual. Nomes são normalizados por caixa, acentos, espaços e um pequeno mapa de aliases. A ingestão ocorre em uma transação para os cinco documentos; relações preservam identificadores das fontes. A validação estrutural não garante que a interpretação semântica do LLM esteja correta.
+
+Na consulta, a geração estruturada do Ollama restringe o LLM a uma de três consultas Cypher permitidas com parâmetros. O código rejeita qualquer texto fora do catálogo. A pergunta também gera um embedding. A recuperação combina cosseno no índice vetorial e Fulltext por Reciprocal Rank Fusion, somando $1/(60+r)$ para cada posição $r$. Entidades mencionadas nos documentos recuperados iniciam a travessia. O algoritmo shortestPath fornece contexto estrutural adicional.
+
+A análise de impacto percorre até quatro dependências seguidas de NECESSITA. Por exemplo, Instalações depende de Alvenaria, que necessita de cimento. A inferência é de impacto potencial, não de atraso comprovado. Uma cadeia curta por etapa é apresentada para facilitar inspeção.
+
+O LLM seleciona caminhos relevantes; o sistema rejeita identificadores inexistentes e produz frases a partir dos nós e relações selecionados. Essa geração restrita limita fatos novos na resposta. A interface Streamlit apresenta subgrafo PyVis, fontes, nós consultados e Cypher. A confiança é cobertura documental qualitativa, sem interpretação probabilística.
+
+\section{Avaliação e Resultados}
+Os testes locais verificam normalização, schema, procedência literal, bloqueio de Cypher arbitrário, fusão de rankings, citações de caminhos, recusa, dimensões de embeddings, HTML do grafo e comportamento da interface. Os serviços externos são substituídos por dublês somente nos testes locais.
+
+\textbf{Registro local:} execução com Python 3.14, 19 testes aprovados, sendo 17 sem serviços e dois integrados com Neo4j e Ollama locais; não houve testes ignorados na execução final. A bateria levou 194,5 segundos. A execução real extraiu 14 entidades, cinco documentos e 30 relações de domínio, mantendo os índices online. O HTML foi gerado e a interface executada pelo AppTest; não houve inspeção interativa em navegador nem compilação local deste artigo.
+
+Os testes de integração executam ingestão real, contagens, verificação de índices, três perguntas de demonstração, recuperação de fontes, menor caminho e perguntas sem evidência. Os resultados observados são cinco materiais; Construmax como fornecedor de cimento; quatro etapas diretamente afetáveis e Instalações indiretamente afetável. Esses resultados foram observados com os modelos e banco locais. Uma execução levou 14,3 s, 9,8 s e 14,5 s nas três perguntas, respectivamente. Essas medições isoladas não constituem benchmark.
+
+\textbf{Antes da submissão:} registrar modelo e versão do banco usados, saída do teste integrado e eventuais falhas. Não há benchmark de precisão, comparação com RAG vetorial ou mensuração de redução de alucinações neste relatório inicial. Os testes de rejeição demonstram mecanismos específicos, não eficácia estatística geral.
+
+\section{Conclusão e Limitações}
+O MVP implementa um fluxo pequeno e inspecionável. O catálogo de três intenções e a verbalização por templates reduzem flexibilidade em troca de simplicidade. Na coleção de cinco documentos, a recuperação pode abranger todo o corpus. Erros de extração, planejamento e seleção continuam possíveis. A execução local confirmou a ingestão e as respostas de demonstração. O ensaio ao vivo continua necessário para verificar usabilidade e condições do computador.
+
+\section*{Atribuição}
+Foram utilizados Neo4j Python Driver, Streamlit, PyVis e python-dotenv, com links no README. O desenvolvimento contou com assistência de IA e requer revisão e compreensão pela equipe. Preencher autores, instituição e resultados reais antes de submeter.
+
+\begin{thebibliography}{4}
+\bibitem{graphrag} D. Edge et al., ``From Local to Global: A Graph RAG Approach to Query-Focused Summarization,'' 2024. \url{https://arxiv.org/abs/2404.16130}.
+\bibitem{kag} L. Liang et al., ``KAG: Boosting LLMs in Professional Domains via Knowledge Augmented Generation,'' 2024. \url{https://arxiv.org/abs/2409.13731}.
+\bibitem{migration} Neo4j, ``Prepare for your migration.'' \url{https://neo4j.com/docs/upgrade-migration-guide/current/version-5/migration/planning/}.
+\bibitem{neo4j} Neo4j, ``Cypher Manual: Shortest paths.'' \url{https://neo4j.com/docs/cypher-manual/5/patterns/shortest-paths/}.
+\end{thebibliography}
+\end{document}
