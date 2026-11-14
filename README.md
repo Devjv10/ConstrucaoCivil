@@ -6,7 +6,7 @@ MVP acadêmico para consultar materiais, fornecedores e dependências de etapas 
 
 A IA agora roda **somente no Ollama local**, sem chave, conta ou créditos. O código rejeita endpoints externos e modelos com nome `cloud`. O servidor deve ser iniciado com `OLLAMA_NO_CLOUD=1`. Neo4j, Streamlit e a lógica GraphRAG permanecem os mesmos.
 
-Configuração verificada: Apple M4, 16 GiB de RAM, macOS 26.6.2 e aproximadamente 67 GiB livres antes dos downloads. Modelos escolhidos: **qwen2.5:7b** (quantizado Q4_K_M, cerca de 4,7 GB, suporte a português/JSON) e **embeddinggemma** (300M, cerca de 622 MB, multilíngue, 768 dimensões). O modelo de chat é maior que variantes de 3B para favorecer extração estruturada, mas cabe na memória disponível. Ollama instalado pelo Homebrew. Não foi adicionada biblioteca Python.
+O projeto utiliza **qwen2.5:7b** para processamento de texto e **embeddinggemma** para embeddings de 768 dimensões, executados localmente pelo Ollama, sem depender de APIs pagas.
 
 ### Iniciar no dia da apresentação
 
